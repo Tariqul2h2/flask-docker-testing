@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+        app:
+                build: .
+                ports:
+                        - "5000:5000"
+                networks:
+                        - flask_network
+                depends_on:
+                        db:
+                                condition: service_healthy
+                links:
+                        - db
+        db:
+                image: postgres:latest
+                environment:
+                        POSTGRES_USER: postgres
+                        POSTGRES_PASSWORD: password
+                        POSTGRESS_DB: flask_db
+
+                ports:
+                        - "5432:5432"
+                restart: always
+
+                volumes:
+                        - postgres_data:/var/lib/postgresql/data
+
+                networks:
+                        - flask_network
+                
+                healthcheck:
+                        test: ["CMD_SHELL", "pg_isready -U $${POSTGRES_USER} -d $${{POSTGRES_DB}} -t 1"]
+                        interval: 10s
+                        timeout: 10s
+                        retries: 10
+                        start_period: 10s
+
+volumes:
+        postgres_data:
+
+networks:
+        flask_network:
