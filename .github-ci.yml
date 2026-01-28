@@ -1,0 +1,53 @@
+name: Flask CI/CD
+
+on:
+  push:
+    branches:
+      - dev
+      - stage
+
+jobs:
+  deploy-dev:
+    name: Deploy to Dev Server
+    if: github.ref == 'refs/heads/dev'
+    runs-on: [self-hosted, flask-dev]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build and deploy (Dev)
+        run: |
+          echo "Deploying to DEV server..."
+          docker compose down || true
+          docker compose up -d --build
+
+      - name: Prune unused Docker images
+        run: |
+          docker image prune -a -f
+          docker system prune -f
+
+
+  deploy-stage:
+    name: Deploy to Stage Server
+    if: github.ref == 'refs/heads/stage'
+    runs-on: [self-hosted, flask-stage]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build and deploy (Stage)
+        run: |
+          echo "Deploying to STAGE server..."
+          docker compose down || true
+          docker compose up -d --build
+
+      - name: Prune unused Docker images
+        run: |
+          docker image prune -a -f
+          docker system prune -f
